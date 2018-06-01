@@ -13,6 +13,8 @@ add_message_files(
     ClosedInterval.msg
     Float32Stamped.msg
     PoseStampedList.msg
+    BoolVector3.msg
+    EndEffectorConstraint.msg
 )
 
 generate_messages(
@@ -27,4 +29,3 @@ catkin_package(
     std_msgs
     geometry_msgs
 )
-
