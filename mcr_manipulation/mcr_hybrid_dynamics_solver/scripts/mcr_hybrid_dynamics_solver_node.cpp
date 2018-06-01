@@ -11,7 +11,7 @@
 #include <tf/transform_listener.h>
 #include <hd_solver_vereshchagin.hpp>
 #include <brics_actuator/JointVelocities.h>
-// #include <mcr_hybrid_dynamic_solver.hpp>
+// #include <mcr_hybrid_dynamics_solver.hpp>
 #include <cmath>
 #include <stdlib.h>     /* abs */
 

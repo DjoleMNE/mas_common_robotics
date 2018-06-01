@@ -1,11 +1,11 @@
 /**
- * This is the ROS node class for the Hybrid Dynamic Solver.
+ * This is the ROS node class for the Hybrid Dynamics Solver.
  * It provides the connection between the ROS environment
  * and the Solver_Vereshchagin class.
  */
 
-#ifndef MCR_HYBRID_DYNAMIC_SOLVER_HPP_
-#define MCR_HYBRID_DYNAMIC_SOLVER_HPP_
+#ifndef MCR_HYBRID_DYNAMICS_SOLVER_HPP_
+#define MCR_HYBRID_DYNAMICS_SOLVER_HPP_
 #include <hd_solver_vereshchagin.hpp>
 #include <motion_specification.hpp>
 #include <brics_actuator/JointAccelerations.h>
@@ -13,13 +13,13 @@
 
 KDL::Solver_Vereshchagin *hd_solver_;
 
-class hybrid_dynamic_solver
+class hybrid_dynamics_solver
 {
 
 public:
 
-    hybrid_dynamic_solver();
-    virtual ~hybrid_dynamic_solver();
+    hybrid_dynamics_solver();
+    virtual ~hybrid_dynamics_solver();
 
     void jointstateCallback(sensor_msgs::JointStateConstPtr joints);
 
@@ -46,4 +46,4 @@ public:
 
 };
 
-#endif /* MCR_HYBRID_DYNAMIC_SOLVER_HPP_*/
+#endif /* MCR_HYBRID_DYNAMICS_SOLVER_HPP_*/

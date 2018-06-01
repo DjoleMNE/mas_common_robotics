@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 2.8.3)
-project(mcr_hybrid_dynamic_solver)
+project(mcr_hybrid_dynamics_solver)
 
 ## Compile as C++11, supported in ROS Kinetic and newer
 add_compile_options(-std=c++11)
@@ -55,7 +55,7 @@ target_link_libraries(${PROJECT_NAME}
 
 ## Declare a C++ library
 # add_library(${PROJECT_NAME}
-#   src/${PROJECT_NAME}/mas_dynamic_control.cpp
+#   src/${PROJECT_NAME}/mas_dynamics_control.cpp
 # )
 
 ## Add cmake target dependencies of the library
@@ -70,7 +70,7 @@ add_dependencies(${PROJECT_NAME}
 #############
 
 ## Add gtest based cpp test target and link libraries
-# catkin_add_gtest(${PROJECT_NAME}-test test/test_mas_dynamic_control.cpp)
+# catkin_add_gtest(${PROJECT_NAME}-test test/test_mas_dynamics_control.cpp)
 # if(TARGET ${PROJECT_NAME}-test)
 #   target_link_libraries(${PROJECT_NAME}-test ${PROJECT_NAME})
 # endif()

@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <launch>
-    <node pkg="mcr_hybrid_dynamic_solver" type="mcr_hybrid_dynamic_solver" name="mcr_hybrid_dynamic_solver_node" output="screen">
+    <node pkg="mcr_hybrid_dynamics_solver" type="mcr_hybrid_dynamics_solver" name="mcr_hybrid_dynamics_solver_node" output="screen">
       <param name="root_name" value="arm_link_0"/>
       <param name="tip_name" value="arm_link_5"/>
       <remap from="~joint_velocity" to="/arm_controller/command_vel"/>

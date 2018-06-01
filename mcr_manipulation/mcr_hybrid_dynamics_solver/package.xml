@@ -1,11 +1,12 @@
 <?xml version="1.0"?>
 <package format="2">
-  <name>mcr_hybrid_dynamic_solver</name>
+  <name>mcr_hybrid_dynamics_solver</name>
   <version>0.0.0</version>
-  <description>Implementation of the Vereshchagin solver, and its extensions</description>
+  <description>Implementation of the Vereshchagin hybrid dynamics solver and its extensions</description>
 
   <!-- One maintainer tag required, multiple allowed, one person per tag -->
   <maintainer email="djordje.vukcevic@smail.inf.h-brs.de">Djordje Vukcevic</maintainer>
+  <maintainer email="sven.schneider@h-brs.de">Sven Schneider</maintainer>
 
   <!-- One license tag required, multiple allowed, one license per tag -->
   <license>MIT</license>
@@ -13,6 +14,8 @@
   <!-- Author tags are optional, multiple are allowed, one per tag -->
   <!-- Authors do not have to be maintainers, but could be -->
   <author email="djordje.vukcevic@smail.inf.h-brs.de">Djordje Vukcevic</author>
+  <author email="sven.schneider@h-brs.de">Sven Schneider</author>
+
 
   <buildtool_depend>catkin</buildtool_depend>
   <build_depend>geometry_msgs</build_depend>

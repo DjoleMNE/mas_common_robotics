@@ -33,6 +33,7 @@ SOFTWARE.
 #include <cmath>
 #include <stdlib.h>     /* abs */
 
+//Generic cpp code for using HD solver
 const int NUMBER_OF_CONSTRAINTS = 1;
 
 class extended_kinematic_chain
