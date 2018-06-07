@@ -305,8 +305,11 @@ void Solver_Vereshchagin::constraint_calculation(const JntArray& beta)
     //which can result in not completely correct results
 
     //M_0_inverse=results[0].M.inverse();
+    std::cout << results[0].M << '\n';
+
     int result  = svd_eigen_HH(results[0].M, Um, Sm, Vm, tmpm);
-    std::cout << "Constraint::SVD: " <<result<< '\n';
+    std::cout << "Constraint::SVD: " << result << '\n';
+
     assert(result == 0);
 
     //truncated svd, what would sdls, dls physically mean?
@@ -327,7 +330,6 @@ void Solver_Vereshchagin::constraint_calculation(const JntArray& beta)
     nu_sum += beta.data;
     nu_sum -= results[0].G;
 
-    std::cout << results[0].M << '\n';
     //equation f) nu = M_0_inverse*(beta_N - E0_tilde`*acc0 - G0)
     nu.noalias() = M_0_inverse * nu_sum;
 }
@@ -375,10 +377,10 @@ void Solver_Vereshchagin::final_upwards_sweep(JntArray &q_dotdot, JntArray &torq
         //The result should be the torque at this joint.
 
 
-        //Code line bellow commented by Djordje Vukcevic ->
-        // -> to avoid overwriting ff_torques ->
-        // -> Required for extension with friction.
-        // -> See getter for this torque
+        /*Code line bellow commented by Djordje Vukcevic ->
+            -> to avoid overwriting ff_torques ->
+            -> Required for extension with friction.
+            -> See getter for this torque. */
         // torques(j) = constraint_torque;
         constraintTorque(j) = dot(s.Z, constraint_force);
 

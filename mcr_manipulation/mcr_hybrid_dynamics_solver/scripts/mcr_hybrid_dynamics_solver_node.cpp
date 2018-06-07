@@ -29,7 +29,6 @@ ros::Publisher joint_vel_publisher;
 
 brics_actuator::JointVelocities joint_vel_msg_;
 
-
 void init_hd_solver(){
 
     int number_of_segments = arm_chain_.getNrOfSegments();
@@ -56,12 +55,18 @@ void init_hd_solver(){
 void init_joint_msgs()
 {
     joint_positions_initialized.resize(arm_chain_.getNrOfJoints(), false);
+    joint_vel_msg_.velocities.resize(arm_chain_.getNrOfJoints());
+
     joint_acc_msg_.accelerations.resize(arm_chain_.getNrOfJoints());
 
     for (unsigned int i = 0; i < arm_chain_.getNrOfSegments(); i++)
     {
+        joint_vel_msg_.velocities[i].joint_uri =
+            arm_chain_.getSegment(i).getJoint().getName();
+        joint_vel_msg_.velocities[i].unit = "s^-1 rad";
+
         joint_acc_msg_.accelerations[i].joint_uri =
-        arm_chain_.getSegment(i).getJoint().getName();
+            arm_chain_.getSegment(i).getJoint().getName();
         joint_acc_msg_.accelerations[i].unit = "s^-2 rad";
     }
 }
@@ -178,12 +183,12 @@ void publishJointAccelerations(KDL::JntArray &joint_accelerations)
 
         if (std::isnan(joint_acc_msg_.accelerations[i].value))
         {
-            ROS_ERROR("invalid joint acceleration: nan");
+            ROS_ERROR("Invalid joint acceleration: nan");
             return;
         }
-        if (std::fabs(joint_acc_msg_.accelerations[i].value) > 1.0)
+        if (std::fabs(joint_acc_msg_.accelerations[i].value) > 0.5)
         {
-            ROS_ERROR("invalid joint acceleration: too fast");
+            ROS_ERROR("Invalid joint acceleration: too fast");
             return;
         }
     }
@@ -213,8 +218,9 @@ void publishJointAccelerations(KDL::JntArray &joint_accelerations)
 // }
 
 void integrate_joints(KDL::JntArray &joint_data,
-                               KDL::JntArray &integrated_data,
-                               double dt){
+                      KDL::JntArray &integrated_data,
+                      double dt)
+{
 
     integrated_data.data = joint_data.data*dt;
 
@@ -225,7 +231,6 @@ void integrate_joints(KDL::JntArray &joint_data,
 
 void publishJointVelocities(KDL::JntArray& joint_velocities)
 {
-
     for (unsigned int i = 0; i < joint_velocities.rows(); i++)
     {
         joint_vel_msg_.velocities[i].value = joint_velocities(i);
@@ -260,12 +265,12 @@ void stopMotion()
 
 int main(int argc, char **argv)
 {
-    // hybrid_dynamic_solver solver_node;
-    ros::init(argc, argv, "mcr_hybrid_dynamic_solver");
+    // hybrid_dynamics_solver solver_node;
+    ros::init(argc, argv, "mcr_hybrid_dynamics_solver");
     ros::NodeHandle node_handle("~");
 
     //TODO:read from param
-    std::string joint_acceleration_topic = "/joint_acceleration";
+    std::string joint_effort_topic = "/joint_effort";
     std::string joint_state_topic = "/joint_states";
     std::string end_effector_acceleration_topic = "/end_effector_acceleration";
     std::string end_effector_force_topic = "/end_effector_force";
@@ -298,7 +303,6 @@ int main(int argc, char **argv)
                      arm_chain_,
                      joint_limits_);
 
-
     int number_of_segments = arm_chain_.getNrOfSegments();
     int number_of_joints = arm_chain_.getNrOfJoints();
 
@@ -319,8 +323,8 @@ int main(int argc, char **argv)
     //register publisher
     joint_vel_publisher = node_handle.advertise<brics_actuator::JointVelocities>(
                             joint_velocity_topic, 1);
-    // joint_acc_publisher_ = node_handle.advertise<brics_actuator::JointAccelerations>(
-    //                         joint_acceleration_topic, 1);
+    // joint_effort_publisher_ = node_handle.advertise<brics_actuator::JointAccelerations>(
+    //                         joint_effort_topic, 1);
     //
 
     //register subscriber
@@ -335,16 +339,38 @@ int main(int argc, char **argv)
     //                                                   1, extForceEECallback);
 
     //loop with 50Hz
-    double rate = 500;
+    double rate = 1000;
     ros::Rate loop_rate(rate);
 
-    motion_.q(0) = -0.0;
-    motion_.q(1) = -0.0;
-    motion_.q(2) = 0.0;
-    motion_.q(3) = 2.2123891926688683e-05;
-    motion_.q(4) = 0.0014380529752347647;
+    //navigation
+    motion_.q(0) = 2.12019;
+    motion_.q(1) = 0.075952;
+    motion_.q(2) = -1.53240;
+    motion_.q(3) = 3.35214;
+    motion_.q(4) = 2.93816;
 
-    //gravity compensation
+    //shelf_intermediate
+    // motion_.q(0) = 3.728617;
+    // motion_.q(1) = 0.087803;
+    // motion_.q(2) = -1.484166;
+    // motion_.q(3) = 3.35212;
+    // motion_.q(4) = 2.957057;
+
+    //Pregrasp pose
+    // motion_.q(0) = 2.2108;
+    // motion_.q(1) = 1.77536;
+    // motion_.q(2) = -1.68529;
+    // motion_.q(3) = 3.40588;
+    // motion_.q(4) = 2.93889;
+
+    //Folded pose
+    // motion_.q(0) = -0.0;
+    // motion_.q(1) = -0.0;
+    // motion_.q(2) = 0.0;
+    // motion_.q(3) = 2.212389e-05;
+    // motion_.q(4) = 0.001438;
+
+    //Stand still command
     KDL::Twist unit_constraint_force_x(
             KDL::Vector(0.0, 0.0, 0.0),     // linear
             KDL::Vector(0.0, 0.0, 0.0));    // angular
@@ -365,84 +391,92 @@ int main(int argc, char **argv)
     //
     KDL::Twist unit_constraint_force_x1(
             KDL::Vector(0.0, 0.0, 0.0),     // linear
-            KDL::Vector(0.0, 0.0, 0.0));    // angular
+            KDL::Vector(1.0, 0.0, 0.0));    // angular
     motion_.end_effector_unit_constraint_forces.setColumn(3, unit_constraint_force_x1);
     motion_.end_effector_acceleration_energy_setpoint(3) = 0.0;
 
     KDL::Twist unit_constraint_force_y1(
             KDL::Vector(0.0, 0.0, 0.0),     // linear
-            KDL::Vector(0.0, 0.0, 0.0));    // angular
+            KDL::Vector(0.0, 1.0, 0.0));    // angular
     motion_.end_effector_unit_constraint_forces.setColumn(4, unit_constraint_force_y1);
     motion_.end_effector_acceleration_energy_setpoint(4) = 0.0;
 
     KDL::Twist unit_constraint_force_z1(
             KDL::Vector(0.0, 0.0, 0.0),     // linear
-            KDL::Vector(0.0, 0.0, 0.0));    // angular
+            KDL::Vector(0.0, 0.0, 1.0));    // angular
     motion_.end_effector_unit_constraint_forces.setColumn(5, unit_constraint_force_z1);
     motion_.end_effector_acceleration_energy_setpoint(5) = 0.0;
 
     // std::cout << motion_.end_effector_acceleration_energy_setpoint << '\n';
 
-    KDL::Wrench externalForceEE(
-        KDL::Vector(0.0,
-                    0.0,
-                    100.0), //Linear Force
-        KDL::Vector(1.0,
-                    1.0,
-                    1.0));//Torque
+    KDL::Wrench externalForceEE(KDL::Vector(50.0,
+                                            0.0,
+                                            0.0), //Linear Force
+                                KDL::Vector(0.0,
+                                            0.0,
+                                            0.0)); //Torque
 
     motion_.external_force[number_of_segments - 1] = externalForceEE;
 
-    int result = hd_solver_.CartToJnt(
-        motion_.q,
-        motion_.qd,
-        motion_.qdd, //qdd_ is overwritten by resulting acceleration
-        motion_.end_effector_unit_constraint_forces,       // alpha
-        motion_.end_effector_acceleration_energy_setpoint, // beta
-        motion_.external_force,
-        motion_.feedforward_torque);
-        std::cout << "Solver return: "<< result << '\n';
-        std::cout <<"Joints  Acc: "<< motion_.qdd << '\n';
-        assert(result == 0);
+    int result = hd_solver_.CartToJnt(motion_.q,
+                                      motion_.qd,
+                                      motion_.qdd, //qdd_ is overwritten by resulting acceleration
+                                      motion_.end_effector_unit_constraint_forces,       // alpha
+                                      motion_.end_effector_acceleration_energy_setpoint, // beta
+                                      motion_.external_force,
+                                      motion_.feedforward_torque);
+    std::cout << "Solver return: "<< result << '\n';
+    std::cout <<"Joints  Acc: "<< motion_.qdd << '\n';
+    assert(result == 0);
 
-        //Time sampling interval
-        double dt = 1.0 / rate;
+    //Time sampling interval
+    double dt = 1.0 / rate;
 
-        double max_joint_vel = 0.25; // radian/s
+    double max_joint_vel = 0.25; // radian/s
 
-        KDL::JntArray joint_velocities(arm_chain_.getNrOfJoints());
-        integrate_joints(motion_.qdd, joint_velocities, dt);
+    KDL::JntArray joint_velocities(arm_chain_.getNrOfJoints());
+    integrate_joints(motion_.qdd, joint_velocities, dt);
 
-        std::cout << "Joint Vel:: " << joint_velocities <<'\n';
+    std::cout << "Joint Vel:: " << joint_velocities <<'\n';
 
-        std::vector<KDL::Twist> frame_acceleration_;
-        frame_acceleration_.resize(arm_chain_.getNrOfSegments()+1);
-        hd_solver_.get_transformed_link_acceleration(frame_acceleration_);
+    std::vector<KDL::Twist> frame_acceleration_;
+    frame_acceleration_.resize(arm_chain_.getNrOfSegments()+1);
+    hd_solver_.get_transformed_link_acceleration(frame_acceleration_);
 
-        std::cout << "Frame ACC" << '\n';
-        for (size_t i = 0; i < arm_chain_.getNrOfSegments()+1; i++) {
-            std::cout << frame_acceleration_[i] << '\n';
-        }
+    std::cout << "Frame ACC" << '\n';
+    for (size_t i = 0; i < arm_chain_.getNrOfSegments()+1; i++) 
+    {
+        std::cout << frame_acceleration_[i] << '\n';
+    }
 
-        Eigen::VectorXd nu(NUMBER_OF_CONSTRAINTS, 1);
-        hd_solver_.get_constraint_magnitude(nu);
-        std::cout << nu << '\n';
+    // Eigen::VectorXd nu(NUMBER_OF_CONSTRAINTS, 1);
+    // hd_solver_.get_constraint_magnitude(nu);
+    // std::cout << nu << '\n';
+
+    stopMotion();
+    ros::Duration(0.5).sleep();
+
+    publishJointVelocities(joint_velocities);
+
+    ros::Duration(1.2).sleep();
+    stopMotion();
 
     // while (ros::ok())
     // {
     //     ros::spinOnce();
-    //
-    //     // publishJointVelocities(joint_velocities);
-    //     //delay
-    //     //stopMotion();
+        
+    //     publishJointVelocities(joint_velocities);
+
+    //     ros::Duration(0.5).sleep();
+    //     stopMotion();
     //     // publishJointAccelerations(motion_.qdd);
-    //
+    
     //     // if (watchdog())
     //     // {
     //     // }
-    //
+    
     //     // std::cout << motion_.q << '\n';
-    //     loop_rate.sleep();
+    //     // loop_rate.sleep();
     // }
 
     return 0;
